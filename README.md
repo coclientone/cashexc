@@ -1,9 +1,10 @@
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Smart Transfer - worldwide money transfer services, exchange rates, transfer tracking and secure verification.">
-<title>Smart Transfer</title>
+<title>Cashex | Smart Transfer</title>
 <style>
 :root{--navy:#081b33;--blue:#1769e0;--cyan:#21b7c9;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--radius:18px}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
@@ -25,6 +26,7 @@ section{padding:78px 0}.section-head{text-align:center;max-width:720px;margin:0 
 <nav><a href="#services">Services</a><a href="#rates">Rates</a><a href="#how">How It Works</a><a href="#security">Security</a><a href="#faq">FAQ</a><a href="#contact">Contact</a></nav>
 <a class="btn btn-primary" href="#transfer">Start Transfer</a>
 </div></header>
+
 <main id="home">
 <section class="hero"><div class="container hero-grid">
 <div><div class="eyebrow">Worldwide money transfer</div><h1>Send money worldwide. Simply.</h1><p>Cashex Smart Transfer is designed to make international and local money transfers clear, fast and easy, with currency information, transfer tracking and digital confirmation.</p>
