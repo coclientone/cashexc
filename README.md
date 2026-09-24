@@ -1,10 +1,15 @@
-<!doctype html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Smart Transfer - worldwide money transfer services, exchange rates, transfer tracking and secure verification.">
-<title>Cashex | Smart Transfer</title>
+<meta name="viewport" content="width=device-width,
+initial-scale=1">
+<meta name="description" 
+content="Smart Transfer - worldwide 
+money transfer services, exchange 
+rates, transfer tracking and secure verification.">
+<title>Cashexc | Smart 
+Transfer</title>
 <style>
 :root{--navy:#081b33;--blue:#1769e0;--cyan:#21b7c9;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--radius:18px}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
@@ -65,10 +70,18 @@ section{padding:78px 0}.section-head{text-align:center;max-width:720px;margin:0 
 <details><summary>Are the exchange rates live?</summary><p>The demonstration calculator is not live. A production version should connect to a reliable exchange-rate provider and clearly display the applicable rate and fees.</p></details>
 </div></div></section>
 
-<section class="contact" id="contact"><div class="container contact-grid"><div><div class="eyebrow">Get started</div><h2>Ready to build Smart Transfer?</h2><p>Connect your payment, banking, compliance and exchange-rate providers to turn this front-end experience into a production money-transfer platform.</p><a class="btn btn-primary" href="#home">Back to top</a></div>
+<section class="contact" id="contact"><div class="container contact-grid"><div><div class="eyebrow">Get started</div> <h2>Ready to build Smart Transfer?
+</h2><p>Connect your payment, 
+banking, compliance and exchange-rate providers to turn this front
+-end experience into a production money-transfer platform.</p><a
+class="btn btn-primary" 
+href="#home">Back to top</a></div>
 <form onsubmit="event.preventDefault();alert('Thank you. Your request has been captured for this demo.');"><input required placeholder="Full name"><input required type="email" placeholder="Email address"><input placeholder="Phone number"><textarea placeholder="How can we help?"></textarea><button class="btn btn-primary" type="submit">Send Request</button></form></div></section>
 </main>
-<footer><div class="container footer-row"><div>© 2026 Cashex Smart Transfer. All rights reserved.</div><div>Terms · Privacy · Compliance</div></div></footer>
+<footer><div class="container footer-row"><div>© 2026 Cashexc
+Smart Transfer. All rights 
+reserved.</div><div>Terms · Privacy 
+· Compliance</div></div></footer>
 <script>
 const amount=document.getElementById('amount'),receive=document.getElementById('receive'),from=document.getElementById('from'),to=document.getElementById('to'),rateText=document.getElementById('rateText');
 function calc(){let a=Number(amount.value)||0;let f=from.value,t=to.value;let rates={USD:1,EUR:1.17,GBP:1.35,AED:.2723,PKR:1/278.5};let r=(rates[f]&&rates[t])?rates[f]/rates[t]:1;receive.value=(a*r).toFixed(2);rateText.textContent=`1 ${f} = ${r.toFixed(4)} ${t}`;}
