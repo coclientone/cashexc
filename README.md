@@ -38,6 +38,7 @@ section{padding:78px 0}.section-head{text-align:center;max-width:720px;margin:0 
 <div class="notice">Actual transfers require appropriate payment, banking and regulatory integrations.</div>
 </div></div></section>
 
+
 <section id="services"><div class="container"><div class="section-head"><h2>Transfer services built around you</h2><p>One platform for common local and international transfer workflows.</p></div>
 <div class="grid">
 <div class="card"><div class="icon">↔</div><h3>Bank-to-bank transfers</h3><p>Send funds to supported local or international bank accounts through integrated payment providers.</p></div>
