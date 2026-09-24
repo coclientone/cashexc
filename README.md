@@ -74,4 +74,4 @@ function calc(){let a=Number(amount.value)||0;let f=from.value,t=to.value;let ra
 [amount,from,to].forEach(x=>x.addEventListener('input',calc));calc();
 </script>
 </body>
-</html># cashexc
+</html>
