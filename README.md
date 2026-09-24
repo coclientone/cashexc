@@ -2,7 +2,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Smart Transfer - worldwide money transfer services, exchange rates, transfer tracking and secure verification."
+<meta name="description" content="Smart Transfer - worldwide money transfer services, exchange rates, transfer tracking and secure verification.">
 <title> Smart Transfer</title>
 <style>
 :root{--navy:#081b33;--blue:#1769e0;--cyan:#21b7c9;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--radius:18px}
