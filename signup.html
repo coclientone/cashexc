@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Create a Cashex Smart Transfer account.">
+<title>Create an account | Cashex</title>
+<style>
+:root{--navy:#081b33;--blue:#1769e0;--cyan:#21b7c9;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--danger:#b42318;--success:#087443}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}a{text-decoration:none;color:inherit}.container{max-width:1180px;margin:auto;padding:0 22px}
+header{background:rgba(8,27,51,.96);color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:#35c4d5}.back{color:#d9e5f3;font-size:14px}.back:hover{color:#fff}
+main{min-height:calc(100vh - 136px);padding:58px 0}.layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}.intro{padding-top:22px}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;font-size:12px;font-weight:800;color:var(--blue)}h1{font-size:45px;line-height:1.1;letter-spacing:-1.5px;margin:12px 0 18px}.intro p{color:var(--muted);max-width:470px}.benefits{list-style:none;padding:0;margin:30px 0}.benefits li{margin:16px 0;padding-left:30px;position:relative}.benefits li:before{content:'✓';position:absolute;left:0;color:var(--blue);font-weight:800}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:32px;box-shadow:0 18px 45px #193b650f}.card h2{margin:0 0 6px;font-size:26px}.hint{margin:0 0 24px;color:var(--muted);font-size:14px}.field{margin:16px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input{width:100%;padding:13px 14px;border:1px solid #cdd8e5;border-radius:9px;font:inherit;color:var(--ink);background:#fff}.field input:focus{outline:3px solid #1769e033;border-color:var(--blue)}.field input[aria-invalid=true]{border-color:var(--danger)}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.password-note{font-size:12px;color:var(--muted);margin-top:5px}.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:20px 0}.check input{margin-top:5px;accent-color:var(--blue)}.check a{color:var(--blue);font-weight:700}.button{width:100%;border:0;border-radius:10px;padding:14px 18px;background:var(--blue);color:#fff;font:inherit;font-weight:800;cursor:pointer}.button:hover{background:#1255b8}.error{color:var(--danger);font-size:13px;margin:5px 0}.success{background:#e9f8f0;color:var(--success);border-radius:10px;padding:14px;margin-top:18px;font-size:14px}footer{background:#fff;border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:13px}
+@media(max-width:800px){.layout{grid-template-columns:1fr;gap:20px}.intro{padding-top:0}h1{font-size:38px}.two{grid-template-columns:1fr}main{padding:35px 0}.card{padding:24px}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><a class="logo" href="index.html">Cash<span>ex</span></a><a class="back" href="index.html">← Back to home</a></div></header>
+<main><div class="container layout">
+<section class="intro" aria-labelledby="page-title"><div class="eyebrow">Get started with Cashex</div><h1>Create your account and move money with confidence.</h1><p>Set up your Cashex Smart Transfer profile in a few steps. You can complete identity verification when you are ready to send a transfer.</p><ul class="benefits"><li>See transfer quotes before you send</li><li>Track transfers and view your transaction history</li><li>Receive digital confirmations for completed transfers</li></ul></section>
+<section class="card" aria-labelledby="form-title"><h2 id="form-title">Create an account</h2><p class="hint">All fields are required unless marked optional.</p><form id="signup-form" novalidate>
+<div class="two"><div class="field"><label for="first-name">First name</label><input id="first-name" name="firstName" autocomplete="given-name" required></div><div class="field"><label for="last-name">Last name</label><input id="last-name" name="lastName" autocomplete="family-name" required></div></div>
+<div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required><p class="error" id="email-error" hidden>Enter a valid email address.</p></div>
+<div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required><div class="password-note">Use at least 8 characters, including a number.</div><p class="error" id="password-error" hidden>Password must be at least 8 characters and include a number.</p></div>
+<label class="check"><input id="terms" name="terms" type="checkbox" required><span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span></label>
+<button class="button" type="submit">Create account</button><div class="success" id="success" role="status" hidden>Thanks — your demo account request has been captured. Connect this form to your authentication provider to finish account creation.</div>
+</form></section></div></main>
+<footer><div class="container">© 2026 Cashex Smart Transfer. Account creation is currently a demonstration workflow.</div></footer>
+<script>
+const form=document.getElementById('signup-form'),email=document.getElementById('email'),password=document.getElementById('password'),emailError=document.getElementById('email-error'),passwordError=document.getElementById('password-error'),success=document.getElementById('success');
+form.addEventListener('submit',event=>{event.preventDefault();const validEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);const validPassword=password.value.length>=8&&/\d/.test(password.value);emailError.hidden=validEmail;passwordError.hidden=validPassword;email.setAttribute('aria-invalid',String(!validEmail));password.setAttribute('aria-invalid',String(!validPassword));if(form.checkValidity()&&validEmail&&validPassword){success.hidden=false;form.querySelector('button').disabled=true;success.scrollIntoView({behavior:'smooth',block:'nearest'});}});
+</script>
+</body>
+</html>
