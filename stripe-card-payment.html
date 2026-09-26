@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cashex — Visa/Mastercard payment</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    :root{--navy:#081b33;--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--line:#e5ebf3;--danger:#b42318;--success:#067647}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:640px;margin:40px auto;padding:0 20px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 12px 36px #10243d14}h1{margin-top:0}label{display:block;margin:16px 0 6px;font-weight:650}input,.stripe-field{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font:inherit}.hint{color:var(--muted);font-size:13px}.notice{padding:12px 14px;background:#ecfdf3;border:1px solid #86efac;border-radius:8px;font-size:13px;color:#166534}button{width:100%;margin-top:24px;padding:14px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.6;cursor:wait}#message{display:none;margin-top:16px;padding:12px;border-radius:8px}#message.error{display:block;background:#fff1f0;color:var(--danger)}#message.success{display:block;background:#ecfdf3;color:var(--success)}
+  </style>
+</head>
+<body>
+  <div class="wrap"><main class="card">
+    <h1>Pay with Visa or Mastercard</h1>
+    <p class="hint">Stripe securely collects your card details. Cashex never receives or stores your card number, expiry date, or CVC.</p>
+    <div class="notice">3-D Secure verification may be requested by your card issuer.</div>
+    <form id="payment-form">
+      <label for="amount">Amount (USD)</label>
+      <input id="amount" type="number" min="1" max="1000000" step="0.01" value="10" required>
+      <label for="recipient-name">Recipient name</label>
+      <input id="recipient-name" required autocomplete="name">
+      <label for="recipient-account">Recipient account or wallet reference</label>
+      <input id="recipient-account" required>
+      <label>Card details</label>
+      <div id="card-element" class="stripe-field"></div>
+      <button id="submit" type="submit">Pay securely</button>
+    </form>
+    <div id="message" role="status" aria-live="polite"></div>
+  </main></div>
+<script>
+  // Configure these globals before loading this page in production.
+  const API_BASE = window.CASHEXC_API_BASE || 'http://localhost:4242';
+  const STRIPE_PUBLISHABLE_KEY = window.CASHEXC_STRIPE_PUBLISHABLE_KEY || 'pk_test_replace_me';
+  const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+  const card = stripe.elements().create('card');
+  card.mount('#card-element');
+  const form = document.querySelector('#payment-form');
+  const button = document.querySelector('#submit');
+  const message = document.querySelector('#message');
+  const value = id => document.querySelector(id).value.trim();
+  const show = (text, type) => { message.textContent = text; message.className = type; };
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.disabled = true;
+    show('Starting secure payment…', '');
+    try {
+      const intentResponse = await fetch(`${API_BASE}/api/payments/create-intent`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({amount: value('#amount'), currency: 'usd', recipientName: value('#recipient-name'), recipientAccount: value('#recipient-account')})
+      });
+      const intent = await intentResponse.json();
+      if (!intentResponse.ok) throw new Error(intent.error || 'Unable to start payment.');
+
+      const confirmation = await stripe.confirmCardPayment(intent.clientSecret, {payment_method: {card}});
+      if (confirmation.error) throw new Error(confirmation.error.message);
+      if (confirmation.paymentIntent.status !== 'succeeded') throw new Error(`Payment status: ${confirmation.paymentIntent.status}`);
+
+      const transferResponse = await fetch(`${API_BASE}/api/transfers/execute`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({paymentIntentId: confirmation.paymentIntent.id, recipientName: value('#recipient-name'), recipientAccount: value('#recipient-account'), currency: 'usd'})
+      });
+      const transfer = await transferResponse.json();
+      if (!transferResponse.ok) throw new Error(transfer.error || 'Payment succeeded but transfer setup failed.');
+      show(`Payment succeeded. Transfer ${transfer.transfer.id} is pending payout-provider configuration.`, 'success');
+      form.reset(); card.clear();
+    } catch (error) {
+      show(error.message || 'Payment failed.', 'error');
+    } finally { button.disabled = false; }
+  });
+</script>
+</body>
+</html>
