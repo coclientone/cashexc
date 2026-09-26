@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cashex — Secure card payment</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:560px;margin:40px auto;padding:0 20px;color:#10243d;background:#f5f8fc}main{background:#fff;padding:28px;border-radius:16px;box-shadow:0 8px 28px #10243d18}label{display:block;margin:14px 0 6px;font-weight:600}input{width:100%;padding:12px;border:1px solid #d6deea;border-radius:8px;box-sizing:border-box}.stripe-field{padding:12px;border:1px solid #d6deea;border-radius:8px;background:#fff}button{width:100%;margin-top:22px;padding:13px;border:0;border-radius:8px;background:#1769e0;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.6}#message{margin-top:16px;padding:12px;border-radius:8px;display:none}.error{display:block!important;background:#fff1f0;color:#9b1c1c}.success{display:block!important;background:#ecfdf3;color:#065f46}.hint{font-size:13px;color:#63748a}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Pay with Visa or Mastercard</h1>
+  <p class="hint">Your card details are securely handled by Stripe. Cashex does not store your card number or CVC.</p>
+  <form id="payment-form">
+    <label for="amount">Amount (USD)</label>
+    <input id="amount" type="number" min="1" max="1000000" step="0.01" value="10" required>
+    <label for="recipient-name">Recipient name</label>
+    <input id="recipient-name" required autocomplete="name">
+    <label for="recipient-account">Recipient account or wallet reference</label>
+    <input id="recipient-account" required>
+    <label>Card details</label>
+    <div id="card-element" class="stripe-field"></div>
+    <button id="submit" type="submit">Pay securely</button>
+  </form>
+  <div id="message" role="status"></div>
+</main>
+<script>
+  const API_BASE = window.CASHEXC_API_BASE || 'http://localhost:4242';
+  const publishableKey = window.CASHEXC_STRIPE_PUBLISHABLE_KEY || 'pk_test_replace_me';
+  const stripe = Stripe(publishableKey);
+  const elements = stripe.elements();
+  const card = elements.create('card');
+  card.mount('#card-element');
+  const form = document.getElementById('payment-form');
+  const button = document.getElementById('submit');
+  const message = document.getElementById('message');
+
+  function show(text, type) { message.textContent = text; message.className = type; }
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    show('Creating secure payment…', '');
+    try {
+      const response = await fetch(`${API_BASE}/api/payments/create-intent`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          amount: document.getElementById('amount').value,
+          currency: 'usd',
+          recipientName: document.getElementById('recipient-name').value,
+          recipientAccount: document.getElementById('recipient-account').value
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to start payment.');
+      const result = await stripe.confirmCardPayment(data.clientSecret, {payment_method: {card}});
+      if (result.error) throw new Error(result.error.message);
+      if (result.paymentIntent.status !== 'succeeded') throw new Error(`Payment status: ${result.paymentIntent.status}`);
+
+      const transferResponse = await fetch(`${API_BASE}/api/transfers/execute`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          paymentIntentId: result.paymentIntent.id,
+          recipientName: document.getElementById('recipient-name').value,
+          recipientAccount: document.getElementById('recipient-account').value,
+          currency: 'usd'
+        })
+      });
+      const transfer = await transferResponse.json();
+      if (!transferResponse.ok) throw new Error(transfer.error || 'Payment succeeded but transfer setup failed.');
+      show(`Payment succeeded. Transfer ${transfer.transfer.id} is pending provider configuration.`, 'success');
+      form.reset(); card.clear();
+    } catch (error) {
+      show(error.message, 'error');
+    } finally { button.disabled = false; }
+  });
+</script>
+</body>
+</html>

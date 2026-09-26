@@ -1,14 +1,13 @@
 {
   "name": "cashexc-server",
-  "version": "1.0.0",
-  "description": "Example Node/Express server for Stripe Elements and bank-transfer connector (demo)",
+  "version": "1.1.0",
+  "description": "Cashex Stripe card-payment and transfer API",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch index.js"
   },
   "dependencies": {
-    "axios": "^1.4.0",
-    "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "stripe": "^11.7.0"

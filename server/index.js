@@ -1,162 +1,129 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const axios = require('axios');
 const Stripe = require('stripe');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
-const port = process.env.PORT || 4242;
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const port = Number(process.env.PORT || 4242);
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const transfers = new Map();
 
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Stripe-Signature');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'cashexc-payment-server' });
-});
-
-app.post('/create-payment-intent', async (req, res) => {
-  try {
-    const { amount, currency = 'USD', paymentMethodType = 'card' } = req.body || {};
-
-    if (!amount || Number(amount) <= 0) {
-      return res.status(400).json({ error: 'Amount must be greater than zero.' });
-    }
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(Number(amount) * 100),
-      currency,
-      payment_method_types: [paymentMethodType],
-      automatic_payment_methods: paymentMethodType === 'card' ? { enabled: true } : undefined,
-      metadata: {
-        source: 'cashexc-dashboard',
-      },
-    });
-
-    return res.json({
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-    });
-  } catch (error) {
-    console.error('create-payment-intent error:', error);
-    return res.status(500).json({ error: error.message || 'Unable to create payment intent.' });
-  }
-});
-
-app.post('/confirm-payment', async (req, res) => {
-  try {
-    const { paymentIntentId, paymentMethodId } = req.body || {};
-
-    if (!paymentIntentId || !paymentMethodId) {
-      return res.status(400).json({ error: 'paymentIntentId and paymentMethodId are required.' });
-    }
-
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-    if (paymentIntent.status === 'requires_confirmation') {
-      const confirmed = await stripe.paymentIntents.confirm(paymentIntentId, {
-        payment_method: paymentMethodId,
-      });
-      return res.json({ ok: true, paymentIntent: confirmed });
-    }
-
-    return res.json({ ok: true, paymentIntent });
-  } catch (error) {
-    console.error('confirm-payment error:', error);
-    return res.status(500).json({ error: error.message || 'Unable to confirm payment.' });
-  }
-});
-
-app.post('/create-bank-transfer', async (req, res) => {
-  try {
-    const { amount, currency = 'USD', recipientName, iban, bankCountry } = req.body || {};
-
-    if (!amount || Number(amount) <= 0) {
-      return res.status(400).json({ error: 'Transfer amount must be greater than zero.' });
-    }
-
-    if (!recipientName || !iban) {
-      return res.status(400).json({ error: 'recipientName and iban are required.' });
-    }
-
-    if (!process.env.WISE_API_KEY) {
-      return res.status(400).json({
-        error: 'WISE_API_KEY not configured. Add your Wise API key in .env to enable bank transfer creation.',
-      });
-    }
-
-    const wisePayload = {
-      profile: process.env.WISE_PROFILE_ID,
-      transferIntent: 'SOURCE_ACCOUNT',
-      targetAccount: {
-        type: 'IBAN',
-        iban,
-        currency,
-        ownerName: recipientName,
-        country: bankCountry || 'US',
-      },
-      quote: {
-        sourceAmount: Number(amount),
-        sourceCurrency: currency,
-        targetCurrency: currency,
-      },
-      customerTransactionId: `cashexc_${Date.now()}`,
-    };
-
-    const response = await axios.post('https://api.transferwise.com/v1/transfers', wisePayload, {
-      headers: {
-        Authorization: `Bearer ${process.env.WISE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return res.json({ ok: true, provider: 'wise', transfer: response.data });
-  } catch (error) {
-    console.error('create-bank-transfer error:', error.response?.data || error.message);
-    return res.status(500).json({
-      error: error.response?.data?.message || error.message || 'Unable to create bank transfer via provider.',
-    });
-  }
-});
-
-app.post('/webhook', async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+// Stripe signature verification requires the unparsed request body.
+app.post(['/webhook', '/api/payments/webhook'], express.raw({ type: 'application/json' }), (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe is not configured.' });
 
   let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers['stripe-signature'],
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error.message);
+    return res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+
+  const paymentIntent = event.data.object;
+  if (event.type === 'payment_intent.succeeded') {
+    console.log(`Payment succeeded: ${paymentIntent.id}`);
+  } else if (event.type === 'payment_intent.payment_failed') {
+    console.warn(`Payment failed: ${paymentIntent.id}`);
+  }
+
+  return res.json({ received: true });
+});
+
+app.use(express.json({ limit: '100kb' }));
+
+function requireStripe(res) {
+  if (!stripe) {
+    res.status(503).json({ error: 'Stripe is not configured. Add STRIPE_SECRET_KEY to the server environment.' });
+    return false;
+  }
+  return true;
+}
+
+function validateAmount(amount) {
+  const value = Number(amount);
+  return Number.isFinite(value) && value > 0 && value <= 1000000;
+}
+
+app.get('/health', (_req, res) => res.json({ ok: true, service: 'cashexc-payment-server' }));
+
+app.post(['/create-payment-intent', '/api/payments/create-intent'], async (req, res) => {
+  if (!requireStripe(res)) return;
+  const { amount, currency = 'usd', recipientName = '', recipientAccount = '' } = req.body || {};
+  if (!validateAmount(amount)) return res.status(400).json({ error: 'Amount must be greater than zero and no more than 1,000,000.' });
 
   try {
-    if (endpointSecret) {
-      event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
-    } else {
-      event = req.body;
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(Number(amount) * 100),
+      currency: String(currency).toLowerCase(),
+      payment_method_types: ['card'],
+      // Stripe.js/Elements collects card data and handles 3DS authentication.
+      confirmation_method: 'automatic',
+      metadata: {
+        source: 'cashexc-dashboard',
+        recipient_name: String(recipientName).slice(0, 200),
+        recipient_account: String(recipientAccount).slice(0, 200),
+      },
+    });
+    return res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
+  } catch (error) {
+    console.error('create-payment-intent error:', error.message);
+    return res.status(400).json({ error: error.message || 'Unable to create payment intent.' });
+  }
+});
+
+// Prototype transfer adapter. Replace this with a licensed payout provider after payment settlement.
+app.post(['/transfers/execute', '/api/transfers/execute'], async (req, res) => {
+  const { paymentIntentId, recipientName, recipientAccount, currency = 'usd' } = req.body || {};
+  if (!paymentIntentId || !recipientName || !recipientAccount) {
+    return res.status(400).json({ error: 'paymentIntentId, recipientName, and recipientAccount are required.' });
+  }
+  if (!requireStripe(res)) return;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(409).json({ error: 'Transfer can only be started after the card payment succeeds.' });
     }
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
 
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    console.log('Payment succeeded:', paymentIntent.id);
-  }
+    const existing = [...transfers.values()].find((item) => item.paymentIntentId === paymentIntentId);
+    if (existing) return res.json({ ok: true, transfer: existing, duplicate: true });
 
-  if (event.type === 'payment_intent.payment_failed') {
-    const paymentIntent = event.data.object;
-    console.log('Payment failed:', paymentIntent.id);
+    const transfer = {
+      id: `demo_${crypto.randomUUID()}`,
+      paymentIntentId,
+      recipientName: String(recipientName).slice(0, 200),
+      recipientAccount: String(recipientAccount).slice(0, 200),
+      currency: String(currency).toLowerCase(),
+      amount: paymentIntent.amount,
+      provider: 'mock',
+      status: 'pending_provider_configuration',
+      createdAt: new Date().toISOString(),
+    };
+    transfers.set(transfer.id, transfer);
+    return res.status(202).json({ ok: true, transfer, message: 'Payment received. Connect a licensed payout provider to send funds.' });
+  } catch (error) {
+    console.error('execute-transfer error:', error.message);
+    return res.status(400).json({ error: error.message || 'Unable to create transfer.' });
   }
-
-  res.json({ received: true });
 });
 
-app.listen(port, () => {
-  console.log(`Cashex payment server listening on http://localhost:${port}`);
+app.get(['/transfers/:id', '/api/transfers/:id'], (req, res) => {
+  const transfer = transfers.get(req.params.id);
+  return transfer ? res.json({ transfer }) : res.status(404).json({ error: 'Transfer not found.' });
 });
+
+app.listen(port, () => console.log(`Cashex payment server listening on http://localhost:${port}`));
