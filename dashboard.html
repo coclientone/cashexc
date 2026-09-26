@@ -1,2 +1,319 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard | Cashex</title><style>:root{--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3}*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg)}a{text-decoration:none;color:inherit}.container{max-width:1100px;margin:auto;padding:0 22px}header{background:#081b33;color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800}.logo span{color:#35c4d5}.button{padding:12px 18px;border-radius:10px;border:1px solid var(--line);background:#fff;font:inherit;font-weight:800;cursor:pointer}.logout{background:var(--blue);color:#fff;border-color:var(--blue)}main{padding:48px 0}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 18px 45px #193b6514}.sub,.muted{color:var(--muted)}.stat{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head><body><header><div class="container nav"><a class="logo" href="index.html">Cash<span>ex</span></a><button id="logout" class="button logout">Log out</button></div></header><main><div class="container grid"><section class="card"><h1>Welcome to your dashboard</h1><p class="sub" id="account-email">Loading account...</p><div class="stat"><span>Account status</span><strong>Active</strong></div><div class="stat"><span>Available balance</span><strong>$0.00</strong></div><div class="stat"><span>Last transfer</span><strong>No transfers yet</strong></div></section><aside class="card"><h2>Quick actions</h2><p class="muted">Your account is ready for future transfer features.</p><a class="button" href="index.html">Back to home</a></aside></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>const config=window.CASHEXC_CONFIG||{};if(!config.supabaseUrl||!config.supabaseAnonKey||config.supabaseUrl.includes('YOUR_')||config.supabaseAnonKey.includes('YOUR_')){location.href='login.html'}else{const client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);client.auth.getUser().then(({data,error})=>{if(error||!data.user){location.href='login.html';return}document.getElementById('account-email').textContent=data.user.email||'Signed-in account'});document.getElementById('logout').addEventListener('click',async()=>{await client.auth.signOut();location.href='login.html'})}</script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard | Cashex</title>
+  <style>
+    :root{--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--danger:#b42318;--radius:18px}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6} a{text-decoration:none;color:inherit}.container{max-width:1100px;margin:0 auto;padding:0 22px}
+    header{background:rgba(8,27,51,.96);color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:#35c4d5}.button{display:inline-block;padding:12px 18px;border-radius:10px;font:inherit;font-weight:800;cursor:pointer;border:1px solid transparent;background:#fff;color:var(--ink);border-color:var(--line)}
+    main{padding:48px 0}.grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:22px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 18px 45px rgba(25,59,101,.06)}h1{margin:0 0 8px;font-size:38px}.sub{margin:0 0 25px;color:var(--muted)}.stat{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}.stat:last-child{border-bottom:none}.muted{color:var(--muted)}
+
+    /* Payment form styles */
+    .transfer-form{display:grid;gap:12px;margin-top:14px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .row{display:flex;gap:8px}
+    input, select, button, textarea{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    .method-choice{display:flex;gap:8px}
+    .small{font-size:13px;color:var(--muted)}
+    .notice{font-size:13px;color:var(--muted)}
+    .success{color:green}
+    .error{color:var(--danger)}
+    .verify-status{font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="logo" href="index.html">Cash<span>ex</span></a>
+      <button class="button logout" id="logout-button" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="container grid">
+      <section class="card">
+        <h1>Welcome to your dashboard</h1>
+        <p class="sub">Your Cashex account is active.</p>
+
+        <div class="stat"><span>Account status</span><strong id="account-status">Verified</strong></div>
+        <div class="stat"><span>Available balance</span><strong id="available-balance">$0.00</strong></div>
+        <div class="stat"><span>Last transfer</span><strong id="last-transfer">No transfers yet</strong></div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">
+
+        <h2>New transfer</h2>
+        <p class="small">Make a local or international payment. This demo includes a mock verification step — replace with your payment provider integrations before going live.</p>
+
+        <form id="transfer-form" class="transfer-form" autocomplete="off">
+          <div class="row">
+            <div class="field" style="flex:1"><label for="from-currency">You send (currency)</label><select id="from-currency"><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option><option>PKR</option></select></div>
+            <div class="field" style="flex:1"><label for="to-currency">Recipient receives (currency)</label><select id="to-currency"><option>PKR</option><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option></select></div>
+          </div>
+
+          <div class="field"><label for="amount">Amount to send</label><input id="amount" type="number" min="0" step="0.01" value="100"></div>
+
+          <div class="field"><label>Payment method</label>
+            <div class="method-choice">
+              <label><input type="radio" name="method" value="card" checked> Card / ATM (Visa/Mastercard)</label>
+              <label><input type="radio" name="method" value="bank"> Online bank transfer</label>
+            </div>
+          </div>
+
+          <div id="card-fields">
+            <div class="field"><label for="card-number">Card / ATM number</label><input id="card-number" placeholder="4444 3333 2222 1111"></div>
+            <div class="row">
+              <div class="field" style="flex:1"><label for="card-exp">Expiry (MM/YY)</label><input id="card-exp" placeholder="08/28"></div>
+              <div class="field" style="flex:1"><label for="card-cvc">CVC</label><input id="card-cvc" placeholder="123"></div>
+            </div>
+            <div class="field"><label for="card-name">Name on card</label><input id="card-name"></div>
+          </div>
+
+          <div id="bank-fields" style="display:none">
+            <div class="field"><label for="bank-name">Bank name</label><input id="bank-name" placeholder="Bank of Example"></div>
+            <div class="field"><label for="bank-account">Recipient account number / IBAN</label><input id="bank-account" placeholder="PK12EXAM... or 123456789"></div>
+            <div class="field"><label for="bank-country">Bank country</label><input id="bank-country" placeholder="Pakistan"></div>
+          </div>
+
+          <div class="field"><label for="recipient-name">Recipient name</label><input id="recipient-name" placeholder="Full name"></div>
+          <div class="field"><label for="notes">Notes (optional)</label><textarea id="notes" rows="2"></textarea></div>
+
+          <div class="field"><div class="row"><div style="flex:1"><div class="notice">Indicative rate: <strong id="rateText">1 USD = 278.50 PKR</strong></div></div><div style="width:200px"><button id="verify-button" type="button" class="button">Verify source</button></div></div></div>
+
+          <div class="field"><button id="send-button" type="button" class="button" style="background:var(--blue);color:#fff">Send transfer</button></div>
+
+          <div id="message" aria-live="polite" class="small"></div>
+        </form>
+
+      </section>
+
+      <aside class="card">
+        <h2>Quick actions</h2>
+        <p class="muted">Secure account workflow is ready for your live backend.</p>
+        <div style="display:grid;gap:12px;margin-top:18px;">
+          <a class="button" href="index.html">Back to home</a>
+          <a class="button" href="signup.html">Create another account</a>
+        </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">
+        <h3>Transfer history (demo)</h3>
+        <div id="history" class="small">No transfers yet</div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    // Demo payment workflow
+    const config = window.CASHEXC_CONFIG || {};
+    const supabaseUrl = config.supabaseUrl;
+    const supabaseAnonKey = config.supabaseAnonKey;
+
+    const mockRates = {
+      'USD:PKR': 278.5,
+      'USD:EUR': 0.92,
+      'EUR:USD': 1.09,
+      'USD:GBP': 0.78,
+      'GBP:USD': 1.28,
+      'USD:AED': 3.67
+    };
+
+    function getRate(from, to) {
+      if (from === to) return 1;
+      const key = `${from}:${to}`;
+      if (mockRates[key]) return mockRates[key];
+      // fallback simple inverse or 1
+      const inv = `${to}:${from}`;
+      if (mockRates[inv]) return 1 / mockRates[inv];
+      return 1;
+    }
+
+    // Elements
+    const availableBalanceEl = document.getElementById('available-balance');
+    const amountEl = document.getElementById('amount');
+    const fromCurrencyEl = document.getElementById('from-currency');
+    const toCurrencyEl = document.getElementById('to-currency');
+    const rateText = document.getElementById('rateText');
+    const verifyButton = document.getElementById('verify-button');
+    const sendButton = document.getElementById('send-button');
+    const messageEl = document.getElementById('message');
+    const historyEl = document.getElementById('history');
+
+    // Payment fields
+    const methodRadios = document.querySelectorAll('input[name="method"]');
+    const cardFields = document.getElementById('card-fields');
+    const bankFields = document.getElementById('bank-fields');
+
+    // Demo user balance (in USD) — in production fetch real balance from your payments ledger
+    let demoBalanceUSD = 1200.00;
+
+    function refreshBalanceDisplay() {
+      availableBalanceEl.textContent = `$${demoBalanceUSD.toFixed(2)}`;
+    }
+
+    function updateRate() {
+      const from = fromCurrencyEl.value;
+      const to = toCurrencyEl.value;
+      const rate = getRate(from, to);
+      rateText.textContent = `1 ${from} = ${rate} ${to}`;
+    }
+
+    fromCurrencyEl.addEventListener('change', updateRate);
+    toCurrencyEl.addEventListener('change', updateRate);
+    amountEl.addEventListener('input', () => { messageEl.textContent = '' });
+
+    methodRadios.forEach(r => r.addEventListener('change', () => {
+      if (document.querySelector('input[name="method"]:checked').value === 'card') {
+        cardFields.style.display = '';
+        bankFields.style.display = 'none';
+      } else {
+        cardFields.style.display = 'none';
+        bankFields.style.display = '';
+      }
+    }));
+
+    // Basic Luhn check for card numbers (demo verification)
+    function luhnCheck(number) {
+      const digits = number.replace(/\s+/g, '').split('').reverse().map(d => parseInt(d,10));
+      if (digits.some(isNaN)) return false;
+      let sum = 0;
+      for (let i=0;i<digits.length;i++){
+        let d = digits[i];
+        if (i % 2 === 1) {
+          d = d * 2;
+          if (d > 9) d -= 9;
+        }
+        sum += d;
+      }
+      return (sum % 10) === 0;
+    }
+
+    // Mock verification: check format and simulate available funds on card/account
+    async function verifySource() {
+      messageEl.textContent = '';
+      const method = document.querySelector('input[name="method"]:checked').value;
+      const from = fromCurrencyEl.value;
+      const amount = parseFloat(amountEl.value) || 0;
+
+      if (amount <= 0) { messageEl.innerHTML = '<span class="error">Enter an amount greater than 0.</span>'; return false; }
+
+      if (method === 'card') {
+        const cardNumber = document.getElementById('card-number').value.trim();
+        if (!luhnCheck(cardNumber)) { messageEl.innerHTML = '<span class="error">Card number appears invalid (demo Luhn check failed).</span>'; return false; }
+        // Simulate checking card available amount — in production call your PSP
+        const simulatedCardAvailable = 500 + (Math.random()*1000); // random demo
+        messageEl.innerHTML = `<span class="verify-status">Card verified (demo). Available: ${from} ${simulatedCardAvailable.toFixed(2)}</span>`;
+        return simulatedCardAvailable >= amount;
+      } else {
+        const acc = document.getElementById('bank-account').value.trim();
+        if (!acc || acc.length < 6) { messageEl.innerHTML = '<span class="error">Enter a valid account/IBAN (demo validation).</span>'; return false; }
+        const simulatedAccountAvailable = 200 + (Math.random()*2000);
+        messageEl.innerHTML = `<span class="verify-status">Account verified (demo). Available: ${from} ${simulatedAccountAvailable.toFixed(2)}</span>`;
+        return simulatedAccountAvailable >= amount;
+      }
+    }
+
+    verifyButton.addEventListener('click', async () => {
+      verifyButton.disabled = true;
+      verifyButton.textContent = 'Verifying...';
+      try {
+        const ok = await verifySource();
+        if (ok) {
+          messageEl.innerHTML += '<div class="success">Source has sufficient funds (demo).</div>';
+        } else {
+          messageEl.innerHTML += '<div class="error">Insufficient funds on source (demo).</div>';
+        }
+      } catch (e) {
+        messageEl.innerHTML = `<span class="error">Verification failed: ${e.message}</span>`;
+      } finally {
+        verifyButton.disabled = false;
+        verifyButton.textContent = 'Verify source';
+      }
+    });
+
+    // Send transfer (demo) — checks available demo balance and creates a fake transfer record
+    sendButton.addEventListener('click', async () => {
+      messageEl.textContent = '';
+      const amount = parseFloat(amountEl.value) || 0;
+      const from = fromCurrencyEl.value;
+      const to = toCurrencyEl.value;
+      const rate = getRate(from, to);
+      const converted = amount * rate;
+
+      if (amount <= 0) { messageEl.innerHTML = '<span class="error">Enter a valid amount.</span>'; return; }
+
+      // convert source amount to USD for demo balance comparison (assume demoBalanceUSD is in USD)
+      const fromToUSD = getRate(from, 'USD');
+      const requiredUSD = amount * fromToUSD;
+
+      if (requiredUSD > demoBalanceUSD) {
+        messageEl.innerHTML = '<span class="error">Your account balance is insufficient to cover this transfer (demo balance checked in USD).</span>';
+        return;
+      }
+
+      // In production: create a transfer record in your backend and call payment provider APIs here
+      // This demo will deduct from demoBalanceUSD and show a history entry
+      demoBalanceUSD -= requiredUSD;
+      refreshBalanceDisplay();
+
+      const record = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        from, to, amount, rate, converted,
+        recipient: document.getElementById('recipient-name').value || 'Unnamed',
+        method: document.querySelector('input[name="method"]:checked').value
+      };
+
+      // append to history
+      const entry = document.createElement('div');
+      entry.textContent = `${record.timestamp} — Sent ${record.amount} ${record.from} → ${record.converted.toFixed(2)} ${record.to} (${record.method}) to ${record.recipient}`;
+      historyEl.prepend(entry);
+
+      messageEl.innerHTML = '<span class="success">Transfer submitted (demo). A real integration would now call the payment provider and banking rails.</span>';
+      // reset some fields
+      // amountEl.value = '0';
+    });
+
+    // Supabase logout wiring if config present
+    const logoutButton = document.getElementById('logout-button');
+    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('YOUR_') || supabaseAnonKey.includes('YOUR_')) {
+      document.body.insertAdjacentHTML('beforeend', '<div style="padding:18px 22px;color:#b42318;">Configure your Supabase URL and anon key in supabase-config.js to enable real authentication and server-backed transfers.</div>');
+      refreshBalanceDisplay();
+    } else {
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+      // on load attempt to get user and fetch profile balance from a hypothetical 'balances' table
+      (async function(){
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          // not signed in
+          window.location.href = 'login.html';
+          return;
+        }
+        // Example: fetch balance from 'balances' table (you must create this table in Supabase)
+        try {
+          const { data, error } = await supabase.from('balances').select('currency,amount').eq('user_id', user.id).single();
+          if (error) throw error;
+          if (data && data.amount) {
+            // convert to USD if returned in another currency (demo assumes USD)
+            demoBalanceUSD = parseFloat(data.amount) || demoBalanceUSD;
+          }
+        } catch (e) {
+          // ignore — keep demoBalanceUSD
+        }
+        refreshBalanceDisplay();
+      })();
+
+      logoutButton.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
+    }
+
+    // initialise
+    updateRate();
+    refreshBalanceDisplay();
+  </script>
+</body>
+</html>
