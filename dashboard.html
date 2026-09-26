@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dashboard | Cashex</title>
   <style>
-    :root{--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--danger:#b42318;--radius:18px}
-    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6} a{text-decoration:none;color:inherit}.container{max-width:1100px;margin:0 auto;padding:0 22px}
-    header{background:rgba(8,27,51,.96);color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:#35c4d5}.button{display:inline-block;padding:12px 18px;border-radius:10px;font:inherit;font-weight:800;cursor:pointer;border:1px solid transparent;background:#fff;color:var(--ink);border-color:var(--line)}
-    main{padding:48px 0}.grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:22px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 18px 45px rgba(25,59,101,.06)}h1{margin:0 0 8px;font-size:38px}.sub{margin:0 0 25px;color:var(--muted)}.stat{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}.stat:last-child{border-bottom:none}.muted{color:var(--muted)}
+    :root{--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--danger:#b42318;--radius:18px;--success:#16a34a}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6} a{text-decoration:none;color:inherit}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    .button{display:inline-block;background:#f0f4f9;color:var(--ink);padding:12px 20px;border-radius:10px;border:1px solid var(--line);cursor:pointer;font:inherit;transition:all 0.2s}
+    .button:hover{background:var(--line)} .button.primary{background:var(--blue);color:#fff}
+    header{background:rgba(8,27,51,.96);color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:var(--blue)}
+    main{padding:48px 0}.grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:22px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 18px 45px rgba(0,0,0,0.05)}
+    h1{font-size:28px;margin:0 0 4px}.h2{font-size:20px;margin:0 0 12px;font-weight:600}.sub{color:var(--muted);margin:0}.stat{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.stat:last-child{border:none} .stat span{color:var(--muted)}.stat strong{font-size:16px}
+    hr{border:none;border-top:1px solid var(--line);margin:18px 0}
 
     /* Payment form styles */
     .transfer-form{display:grid;gap:12px;margin-top:14px}
@@ -18,9 +23,41 @@
     .method-choice{display:flex;gap:8px}
     .small{font-size:13px;color:var(--muted)}
     .notice{font-size:13px;color:var(--muted)}
-    .success{color:green}
+    .success{color:var(--success)}
     .error{color:var(--danger)}
-    .verify-status{font-size:13px}
+    .verify-status{font-size:13px;color:var(--blue)}
+
+    /* User Profile Section */
+    .user-profile{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+    .avatar{width:64px;height:64px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold}
+    .profile-info h3{margin:0;font-size:18px}.profile-info p{margin:4px 0;color:var(--muted);font-size:13px}
+
+    /* Transaction History Styles */
+    .transaction-history{margin-top:22px}
+    .history-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .filter-btn{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s}
+    .filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    
+    .transaction-item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px;background:#f9fafb;border-radius:10px;border:1px solid var(--line);margin-bottom:8px;align-items:center}
+    .transaction-details{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .transaction-info{flex:1}
+    .transaction-type{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+    .type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+    .type-badge.sent{background:#fee2e2;color:#991b1b}
+    .type-badge.received{background:#dcfce7;color:#166534}
+    .transaction-desc{font-size:13px;color:var(--muted)}
+    .transaction-time{font-size:12px;color:#999}
+    .transaction-amount{text-align:right;font-weight:600;font-size:14px}
+    .transaction-amount.sent{color:var(--danger)}
+    .transaction-amount.received{color:var(--success)}
+
+    .empty-state{text-align:center;padding:32px 16px;color:var(--muted)}
+    .empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:0.3}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-bottom:22px}
+    .stat-card{background:#f9fafb;padding:16px;border-radius:10px;border:1px solid var(--line);text-align:center}
+    .stat-card-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+    .stat-card-value{font-size:20px;font-weight:700;margin-top:6px}
   </style>
 </head>
 <body>
@@ -34,14 +71,35 @@
   <main>
     <div class="container grid">
       <section class="card">
-        <h1>Welcome to your dashboard</h1>
-        <p class="sub">Your Cashex account is active.</p>
+        <!-- User Profile Header -->
+        <div class="user-profile">
+          <div class="avatar" id="user-avatar">C</div>
+          <div class="profile-info">
+            <h3 id="user-name">Cashex User</h3>
+            <p id="user-email">user@cashex.com</p>
+            <p id="account-status-text">Account Status: <strong id="account-status-badge">Verified</strong></p>
+          </div>
+        </div>
 
-        <div class="stat"><span>Account status</span><strong id="account-status">Verified</strong></div>
-        <div class="stat"><span>Available balance</span><strong id="available-balance">$0.00</strong></div>
-        <div class="stat"><span>Last transfer</span><strong id="last-transfer">No transfers yet</strong></div>
+        <hr>
 
-        <hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">
+        <!-- Account Statistics -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">Available Balance</div>
+            <div class="stat-card-value" id="available-balance">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Sent</div>
+            <div class="stat-card-value" id="total-sent">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Received</div>
+            <div class="stat-card-value" id="total-received">$0.00</div>
+          </div>
+        </div>
+
+        <hr>
 
         <h2>New transfer</h2>
         <p class="small">Make a local or international payment. This demo includes a mock verification step — replace with your payment provider integrations before going live.</p>
@@ -79,9 +137,9 @@
           <div class="field"><label for="recipient-name">Recipient name</label><input id="recipient-name" placeholder="Full name"></div>
           <div class="field"><label for="notes">Notes (optional)</label><textarea id="notes" rows="2"></textarea></div>
 
-          <div class="field"><div class="row"><div style="flex:1"><div class="notice">Indicative rate: <strong id="rateText">1 USD = 278.50 PKR</strong></div></div><div style="width:200px"><button id="verify-button" type="button" class="button">Verify source</button></div></div></div>
+          <div class="field"><div class="row"><div style="flex:1"><div class="notice">Indicative rate: <strong id="rateText">1 USD = 278.50 PKR</strong></div></div><div style="width:200px"><button type="button" id="verify-button" class="button">Verify source</button></div></div></div>
 
-          <div class="field"><button id="send-button" type="button" class="button" style="background:var(--blue);color:#fff">Send transfer</button></div>
+          <div class="field"><button id="send-button" type="button" class="button primary" style="width:100%">Send transfer</button></div>
 
           <div id="message" aria-live="polite" class="small"></div>
         </form>
@@ -89,16 +147,33 @@
       </section>
 
       <aside class="card">
-        <h2>Quick actions</h2>
+        <h2>Transaction History</h2>
+        
+        <!-- Filter Buttons -->
+        <div class="history-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="sent">Sent</button>
+          <button class="filter-btn" data-filter="received">Received</button>
+        </div>
+
+        <!-- Transaction List -->
+        <div id="transaction-history-container">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>No transactions yet</p>
+          </div>
+        </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">
+        
+        <h3>Quick actions</h3>
         <p class="muted">Secure account workflow is ready for your live backend.</p>
         <div style="display:grid;gap:12px;margin-top:18px;">
           <a class="button" href="index.html">Back to home</a>
           <a class="button" href="signup.html">Create another account</a>
         </div>
-
-        <hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">
-        <h3>Transfer history (demo)</h3>
-        <div id="history" class="small">No transfers yet</div>
       </aside>
     </div>
   </main>
@@ -117,21 +192,28 @@
       'EUR:USD': 1.09,
       'USD:GBP': 0.78,
       'GBP:USD': 1.28,
-      'USD:AED': 3.67
+      'USD:AED': 3.67,
+      'PKR:USD': 0.0036,
+      'AED:USD': 0.27
     };
 
     function getRate(from, to) {
       if (from === to) return 1;
       const key = `${from}:${to}`;
       if (mockRates[key]) return mockRates[key];
-      // fallback simple inverse or 1
       const inv = `${to}:${from}`;
       if (mockRates[inv]) return 1 / mockRates[inv];
       return 1;
     }
 
     // Elements
+    const userAvatarEl = document.getElementById('user-avatar');
+    const userNameEl = document.getElementById('user-name');
+    const userEmailEl = document.getElementById('user-email');
+    const accountStatusEl = document.getElementById('account-status-badge');
     const availableBalanceEl = document.getElementById('available-balance');
+    const totalSentEl = document.getElementById('total-sent');
+    const totalReceivedEl = document.getElementById('total-received');
     const amountEl = document.getElementById('amount');
     const fromCurrencyEl = document.getElementById('from-currency');
     const toCurrencyEl = document.getElementById('to-currency');
@@ -139,26 +221,117 @@
     const verifyButton = document.getElementById('verify-button');
     const sendButton = document.getElementById('send-button');
     const messageEl = document.getElementById('message');
-    const historyEl = document.getElementById('history');
+    const historyContainerEl = document.getElementById('transaction-history-container');
+    const filterButtons = document.querySelectorAll('.filter-btn');
 
     // Payment fields
     const methodRadios = document.querySelectorAll('input[name="method"]');
     const cardFields = document.getElementById('card-fields');
     const bankFields = document.getElementById('bank-fields');
 
-    // Demo user balance (in USD) — in production fetch real balance from your payments ledger
+    // Demo user data
     let demoBalanceUSD = 1200.00;
+    let demoUser = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john@cashex.com',
+      status: 'Verified'
+    };
+
+    // Transaction history store
+    let transactionHistory = [
+      { id: 1, type: 'received', amount: 150, currency: 'USD', from: 'Alice Smith', date: new Date(Date.now() - 2*24*60*60*1000), method: 'bank', description: 'Payment for services' },
+      { id: 2, type: 'sent', amount: 500, currency: 'PKR', to: 'Ahmed Khan', date: new Date(Date.now() - 5*24*60*60*1000), method: 'card', description: 'Family support' },
+      { id: 3, type: 'received', amount: 75.50, currency: 'EUR', from: 'Sarah Johnson', date: new Date(Date.now() - 7*24*60*60*1000), method: 'bank', description: 'Freelance work' }
+    ];
+    let currentFilter = 'all';
+
+    // Initialize profile
+    function initializeProfile() {
+      userNameEl.textContent = demoUser.name;
+      userEmailEl.textContent = demoUser.email;
+      accountStatusEl.textContent = demoUser.status;
+      userAvatarEl.textContent = demoUser.name.charAt(0).toUpperCase();
+    }
 
     function refreshBalanceDisplay() {
       availableBalanceEl.textContent = `$${demoBalanceUSD.toFixed(2)}`;
+      updateTransactionStats();
+    }
+
+    function updateTransactionStats() {
+      let totalSent = 0;
+      let totalReceived = 0;
+
+      transactionHistory.forEach(tx => {
+        if (tx.type === 'sent') {
+          totalSent += tx.amount;
+        } else {
+          totalReceived += tx.amount;
+        }
+      });
+
+      totalSentEl.textContent = `$${totalSent.toFixed(2)}`;
+      totalReceivedEl.textContent = `$${totalReceived.toFixed(2)}`;
     }
 
     function updateRate() {
       const from = fromCurrencyEl.value;
       const to = toCurrencyEl.value;
       const rate = getRate(from, to);
-      rateText.textContent = `1 ${from} = ${rate} ${to}`;
+      rateText.textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
     }
+
+    function renderTransactionHistory() {
+      let filtered = transactionHistory;
+      if (currentFilter !== 'all') {
+        filtered = transactionHistory.filter(tx => tx.type === currentFilter);
+      }
+
+      if (filtered.length === 0) {
+        historyContainerEl.innerHTML = `
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>No ${currentFilter === 'all' ? 'transactions' : currentFilter + ' transactions'} yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      historyContainerEl.innerHTML = filtered.map(tx => {
+        const isSent = tx.type === 'sent';
+        const dateStr = tx.date.toLocaleDateString() + ' ' + tx.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const party = isSent ? tx.to : tx.from;
+        
+        return `
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <div class="transaction-type">
+                <span class="type-badge ${tx.type}">${tx.type.toUpperCase()}</span>
+                <span><strong>${party}</strong></span>
+              </div>
+              <div class="transaction-desc">${tx.description}</div>
+              <div class="transaction-time">${dateStr} • ${tx.method}</div>
+            </div>
+            <div class="transaction-amount ${tx.type}">
+              ${isSent ? '−' : '+'}${tx.amount.toFixed(2)} ${tx.currency}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter button handlers
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderTransactionHistory();
+      });
+    });
 
     fromCurrencyEl.addEventListener('change', updateRate);
     toCurrencyEl.addEventListener('change', updateRate);
@@ -174,7 +347,7 @@
       }
     }));
 
-    // Basic Luhn check for card numbers (demo verification)
+    // Basic Luhn check for card numbers
     function luhnCheck(number) {
       const digits = number.replace(/\s+/g, '').split('').reverse().map(d => parseInt(d,10));
       if (digits.some(isNaN)) return false;
@@ -190,7 +363,7 @@
       return (sum % 10) === 0;
     }
 
-    // Mock verification: check format and simulate available funds on card/account
+    // Mock verification
     async function verifySource() {
       messageEl.textContent = '';
       const method = document.querySelector('input[name="method"]:checked').value;
@@ -202,8 +375,7 @@
       if (method === 'card') {
         const cardNumber = document.getElementById('card-number').value.trim();
         if (!luhnCheck(cardNumber)) { messageEl.innerHTML = '<span class="error">Card number appears invalid (demo Luhn check failed).</span>'; return false; }
-        // Simulate checking card available amount — in production call your PSP
-        const simulatedCardAvailable = 500 + (Math.random()*1000); // random demo
+        const simulatedCardAvailable = 500 + (Math.random()*1000);
         messageEl.innerHTML = `<span class="verify-status">Card verified (demo). Available: ${from} ${simulatedCardAvailable.toFixed(2)}</span>`;
         return simulatedCardAvailable >= amount;
       } else {
@@ -221,7 +393,7 @@
       try {
         const ok = await verifySource();
         if (ok) {
-          messageEl.innerHTML += '<div class="success">Source has sufficient funds (demo).</div>';
+          messageEl.innerHTML += '<div class="success"> Source has sufficient funds (demo).</div>';
         } else {
           messageEl.innerHTML += '<div class="error">Insufficient funds on source (demo).</div>';
         }
@@ -233,7 +405,7 @@
       }
     });
 
-    // Send transfer (demo) — checks available demo balance and creates a fake transfer record
+    // Send transfer
     sendButton.addEventListener('click', async () => {
       messageEl.textContent = '';
       const amount = parseFloat(amountEl.value) || 0;
@@ -244,7 +416,6 @@
 
       if (amount <= 0) { messageEl.innerHTML = '<span class="error">Enter a valid amount.</span>'; return; }
 
-      // convert source amount to USD for demo balance comparison (assume demoBalanceUSD is in USD)
       const fromToUSD = getRate(from, 'USD');
       const requiredUSD = amount * fromToUSD;
 
@@ -253,54 +424,48 @@
         return;
       }
 
-      // In production: create a transfer record in your backend and call payment provider APIs here
-      // This demo will deduct from demoBalanceUSD and show a history entry
       demoBalanceUSD -= requiredUSD;
       refreshBalanceDisplay();
 
       const record = {
         id: Date.now(),
-        timestamp: new Date().toISOString(),
-        from, to, amount, rate, converted,
-        recipient: document.getElementById('recipient-name').value || 'Unnamed',
-        method: document.querySelector('input[name="method"]:checked').value
+        type: 'sent',
+        amount: amount,
+        currency: from,
+        to: document.getElementById('recipient-name').value || 'Unnamed recipient',
+        date: new Date(),
+        method: document.querySelector('input[name="method"]:checked').value,
+        description: document.getElementById('notes').value || 'Transfer'
       };
 
-      // append to history
-      const entry = document.createElement('div');
-      entry.textContent = `${record.timestamp} — Sent ${record.amount} ${record.from} → ${record.converted.toFixed(2)} ${record.to} (${record.method}) to ${record.recipient}`;
-      historyEl.prepend(entry);
+      transactionHistory.unshift(record);
+      renderTransactionHistory();
+      updateTransactionStats();
 
       messageEl.innerHTML = '<span class="success">Transfer submitted (demo). A real integration would now call the payment provider and banking rails.</span>';
-      // reset some fields
-      // amountEl.value = '0';
     });
 
-    // Supabase logout wiring if config present
+    // Supabase logout wiring
     const logoutButton = document.getElementById('logout-button');
     if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('YOUR_') || supabaseAnonKey.includes('YOUR_')) {
       document.body.insertAdjacentHTML('beforeend', '<div style="padding:18px 22px;color:#b42318;">Configure your Supabase URL and anon key in supabase-config.js to enable real authentication and server-backed transfers.</div>');
       refreshBalanceDisplay();
     } else {
       const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-      // on load attempt to get user and fetch profile balance from a hypothetical 'balances' table
       (async function(){
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          // not signed in
           window.location.href = 'login.html';
           return;
         }
-        // Example: fetch balance from 'balances' table (you must create this table in Supabase)
         try {
           const { data, error } = await supabase.from('balances').select('currency,amount').eq('user_id', user.id).single();
           if (error) throw error;
           if (data && data.amount) {
-            // convert to USD if returned in another currency (demo assumes USD)
             demoBalanceUSD = parseFloat(data.amount) || demoBalanceUSD;
           }
         } catch (e) {
-          // ignore — keep demoBalanceUSD
+          // ignore
         }
         refreshBalanceDisplay();
       })();
@@ -311,9 +476,11 @@
       });
     }
 
-    // initialise
+    // Initialize
+    initializeProfile();
     updateRate();
     refreshBalanceDisplay();
+    renderTransactionHistory();
   </script>
 </body>
 </html>
