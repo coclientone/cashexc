@@ -1,33 +1,37 @@
-# Cashex Stripe card-payment prototype
+# Cashex secure payment and payout flow
 
-This directory contains a Node/Express API for Visa and Mastercard debit/credit card payments through Stripe. Card numbers and CVC values are collected by Stripe Elements and never sent to Cashex or stored by this server. Stripe can request 3-D Secure verification when required by the issuer.
+This directory contains the live payment API for card collection via Stripe and bank payout dispatch via Wise. The payment flow is designed to keep card numbers and expiry/CVC values out of the Cashex application and let Stripe handle 3-D Secure verification for Visa and Mastercard.
 
 ## Run locally
 
 ```bash
 cd server
 cp .env.example .env
-# Set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY to Stripe test-mode keys
+# Fill in test-mode Stripe keys and Wise credentials.
 npm install
 npm start
 ```
 
-Open `payment.html` from a local web server (not `file://`) and set `API_BASE` in the page if the API is hosted elsewhere.
-
-For signed webhooks:
+For Stripe webhooks:
 
 ```bash
 stripe listen --forward-to localhost:4242/api/payments/webhook
 # copy the displayed whsec_... value into STRIPE_WEBHOOK_SECRET
 ```
 
-Use Stripe test cards only in test mode, for example `4242 4242 4242 4242` (successful payment). Do not use real card details during development.
+Use Stripe test cards only, for example `4242 4242 4242 4242`.
 
 ## API
 
-- `POST /api/payments/create-intent` — creates a card-only PaymentIntent and returns its client secret.
-- `POST /api/payments/webhook` — verifies Stripe webhook signatures.
-- `POST /api/transfers/execute` — verifies a succeeded PaymentIntent and creates a **mock pending** transfer record.
-- `GET /api/transfers/:id` — retrieves a mock transfer record.
+- `POST /api/payments/create-intent` — creates a PaymentIntent and returns `clientSecret`.
+- `POST /api/payments/webhook` — verifies Stripe signature and records webhook events.
+- `POST /api/transfers/execute` — verifies a successful Stripe payment and creates a Wise transfer request.
+- `GET /api/payments` — list stored payment records (requires `x-admin-key` when `ADMIN_API_KEY` is configured).
+- `GET /api/transfers` — list stored transfer records (requires `x-admin-key` when `ADMIN_API_KEY` is configured).
 
-The transfer endpoint intentionally does not move money. Before production, replace the mock adapter with a licensed payout provider, add authentication/authorization, persistent transaction storage, idempotency keys, KYC/AML controls, sanctions screening, rate limits, audit logging, and reconciliation. A Stripe payment success alone is not authorization to pay out to arbitrary recipient details.
+## Production notes
+
+- Keep all secret keys in environment variables only.
+- Use HTTPS for webhooks and frontend hosting.
+- Add recipient KYC/AML and sanctions checks before payout release.
+- Replace the mock/pending logic with real recipient validation and reconciliation once your provider credentials and onboarding are ready.
