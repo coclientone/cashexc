@@ -1,18 +1,66 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Create a Cashex Smart Transfer account.">
-<title>Create account | Cashex</title>
-<style>
-:root{--navy:#081b33;--blue:#1769e0;--ink:#10243d;--muted:#63748a;--bg:#f5f8fc;--card:#fff;--line:#e5ebf3;--danger:#b42318;--success:#087443}*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}a{text-decoration:none;color:inherit}.container{max-width:1100px;margin:auto;padding:0 22px}header{background:rgba(8,27,51,.96);color:#fff}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:800}.logo span{color:#35c4d5}.nav a{color:#d9e5f3;font-size:14px}main{min-height:calc(100vh - 150px);padding:58px 0}.layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px}.intro{padding-top:22px}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;font-size:12px;font-weight:800;color:var(--blue)}h1{font-size:46px;line-height:1.08;margin:12px 0 18px}.intro p,.hint,.note{color:var(--muted)}.benefits{list-style:none;padding:0;margin:30px 0}.benefits li{margin:16px 0}.benefits li:before{content:'✓';color:var(--blue);font-weight:800;margin-right:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:32px;box-shadow:0 18px 45px #193b6514}.field{margin:16px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input{width:100%;padding:13px 14px;border:1px solid #cdd8e5;border-radius:9px;font:inherit}.field input:focus{outline:3px solid #1769e033;border-color:var(--blue)}.field input[aria-invalid=true]{border-color:var(--danger)}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.password-note,.note{font-size:12px}.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:20px 0}.check input{margin-top:5px;accent-color:var(--blue)}.check a{color:var(--blue);font-weight:700}.button{width:100%;border:0;border-radius:10px;padding:14px 18px;background:var(--blue);color:#fff;font:inherit;font-weight:800;cursor:pointer}.button:disabled{opacity:.7}.error{color:var(--danger);font-size:13px;margin:6px 0}.success{display:none;background:#e9f8f0;color:var(--success);border-radius:10px;padding:14px;margin-top:18px;font-size:14px}.success.show{display:block}footer{background:#fff;border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:13px}@media(max-width:800px){.layout{grid-template-columns:1fr;gap:20px}h1{font-size:38px}.two{grid-template-columns:1fr}.card{padding:24px}.nav{height:68px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cashex — Sign up</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:40px}
+    .card{max-width:560px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px}
+    label{display:block;margin-top:12px;font-weight:600}
+    input{width:100%;padding:10px;margin-top:6px;border:1px solid #ddd;border-radius:8px}
+    button{margin-top:18px;padding:12px 16px;border-radius:8px;background:#1769e0;color:white;border:none;font-weight:700}
+  </style>
 </head>
 <body>
-<header><div class="container nav"><a class="logo" href="index.html">Cash<span>ex</span></a><a href="login.html">Already have an account? Login</a></div></header>
-<main><div class="container layout"><section class="intro"><div class="eyebrow">Get started with Cashex</div><h1>Create your account and move money with confidence.</h1><p>Set up your Cashex Smart Transfer profile and verify your email before signing in.</p><ul class="benefits"><li>See transfer quotes before you send</li><li>Track transfers and transaction history</li><li>Receive digital confirmations</li></ul></section><section class="card"><h2>Create an account</h2><p class="hint">Use a real email address to verify your account.</p><form id="signup-form" novalidate><div class="two"><div class="field"><label for="first-name">First name</label><input id="first-name" autocomplete="given-name" required></div><div class="field"><label for="last-name">Last name</label><input id="last-name" autocomplete="family-name" required></div></div><div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required><p id="email-error" class="error" hidden>Enter a valid email address.</p></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" minlength="8" required><div class="password-note">Use at least 8 characters and include a number.</div><p id="password-error" class="error" hidden>Password must be at least 8 characters and include a number.</p></div><div class="field"><label for="confirm-password">Confirm password</label><input id="confirm-password" type="password" autocomplete="new-password" required><p id="confirm-error" class="error" hidden>Passwords do not match.</p></div><label class="check"><input id="terms" type="checkbox" required><span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span></label><button class="button" type="submit">Create account</button><div id="success" class="success" role="status" aria-live="polite">Account created. Check your email to confirm it before signing in.</div><p id="form-message" class="error" aria-live="polite"></p><p class="note">Powered by Supabase Auth. Configure <strong>supabase-config.js</strong> before use.</p></form></section></div></main><footer><div class="container">© 2026 Cashex Smart Transfer.</div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>
-const form=document.getElementById('signup-form'),email=document.getElementById('email'),password=document.getElementById('password'),confirmPassword=document.getElementById('confirm-password'),message=document.getElementById('form-message'),success=document.getElementById('success'),button=form.querySelector('button');
-form.addEventListener('submit',async event=>{event.preventDefault();message.textContent='';success.classList.remove('show');const validEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value),validPassword=password.value.length>=8&&/\d/.test(password.value),matching=password.value===confirmPassword.value&&confirmPassword.value.length>0;document.getElementById('email-error').hidden=validEmail;document.getElementById('password-error').hidden=validPassword;document.getElementById('confirm-error').hidden=matching;if(!validEmail||!validPassword||!matching||!document.getElementById('terms').checked){message.textContent='Please review the form and fix the highlighted fields.';return}const config=window.CASHEXC_CONFIG||{};if(!config.supabaseUrl||!config.supabaseAnonKey||config.supabaseUrl.includes('YOUR_')||config.supabaseAnonKey.includes('YOUR_')){message.textContent='Supabase is not configured. Add your project URL and anon key to supabase-config.js.';return}button.disabled=true;button.textContent='Creating account...';try{const client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey),{error}=await client.auth.signUp({email:email.value.trim(),password:password.value,options:{emailRedirectTo:window.location.origin+'/login.html',data:{first_name:document.getElementById('first-name').value.trim(),last_name:document.getElementById('last-name').value.trim()}}});if(error)throw error;success.classList.add('show');form.reset()}catch(error){message.textContent=error.message||'Unable to create account.'}finally{button.disabled=false;button.textContent='Create account'}});
-</script></body></html>
+  <main class="card">
+    <h1>Create your Cashex account</h1>
+    <p style="color:#666">Quick demo signup — this stores a local demo account. For production replace with real backend user creation.</p>
+
+    <form id="signup-form">
+      <label for="full-name">Full name</label>
+      <input id="full-name" type="text" required placeholder="John Doe">
+
+      <label for="email">Email</label>
+      <input id="email" type="email" required placeholder="you@example.com">
+
+      <label for="receive-account">Default receiving account (IBAN / Account)</label>
+      <input id="receive-account" type="text" placeholder="PK12EXPL... or wallet id (optional)">
+
+      <button type="submit">Create Account</button>
+    </form>
+
+    <div id="notice" style="margin-top:12px;color:#064e3b;display:none"></div>
+  </main>
+
+  <script>
+    // Demo signup: store a local user object. Replace with server-side call in production.
+    const form = document.getElementById('signup-form');
+    const notice = document.getElementById('notice');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const receive = document.getElementById('receive-account').value.trim();
+
+      if (!name || !email) {
+        notice.textContent = 'Name and email are required.'; notice.style.display = 'block'; return;
+      }
+
+      const user = {
+        id: 'user_' + Math.random().toString(36).slice(2, 10),
+        name,
+        email,
+        receiveAccount: receive || '',
+        createdAt: new Date().toISOString()
+      };
+
+      localStorage.setItem('cashexc_user', JSON.stringify(user));
+      notice.textContent = 'Account created. Redirecting to dashboard...'; notice.style.display = 'block';
+
+      setTimeout(() => window.location.href = 'dashboard-payments.html', 800);
+    });
+  </script>
+</body>
+</html>
