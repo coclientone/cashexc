@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const Stripe = require('stripe');
 const crypto = require('crypto');
 require('dotenv').config();
@@ -6,123 +7,116 @@ require('dotenv').config();
 const app = express();
 const port = Number(process.env.PORT || 4242);
 const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const wiseBase = (process.env.WISE_API_BASE || 'https://api.wise.com').replace(/\/$/, '');
+const wise = axios.create({
+  baseURL: wiseBase,
+  timeout: 15000,
+  headers: { Authorization: `Bearer ${process.env.WISE_API_KEY || ''}`, 'Content-Type': 'application/json' },
+});
 const transfers = new Map();
 
 app.use((req, res, next) => {
-  const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  const origin = process.env.FRONTEND_ORIGIN || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Stripe-Signature');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-// Stripe signature verification requires the unparsed request body.
-app.post(['/webhook', '/api/payments/webhook'], express.raw({ type: 'application/json' }), (req, res) => {
-  if (!stripe) return res.status(503).json({ error: 'Stripe is not configured.' });
-
+// This route must run before express.json(): Stripe signs the raw payload.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: 'Stripe webhook is not configured.' });
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      req.headers['stripe-signature'],
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
   } catch (error) {
-    console.error('Webhook signature verification failed:', error.message);
     return res.status(400).send(`Webhook Error: ${error.message}`);
   }
-
-  const paymentIntent = event.data.object;
-  if (event.type === 'payment_intent.succeeded') {
-    console.log(`Payment succeeded: ${paymentIntent.id}`);
-  } else if (event.type === 'payment_intent.payment_failed') {
-    console.warn(`Payment failed: ${paymentIntent.id}`);
-  }
-
+  if (event.type === 'payment_intent.succeeded') console.log('Stripe payment succeeded:', event.data.object.id);
+  if (event.type === 'payment_intent.payment_failed') console.warn('Stripe payment failed:', event.data.object.id);
   return res.json({ received: true });
 });
 
 app.use(express.json({ limit: '100kb' }));
 
 function requireStripe(res) {
-  if (!stripe) {
-    res.status(503).json({ error: 'Stripe is not configured. Add STRIPE_SECRET_KEY to the server environment.' });
-    return false;
+  if (!stripe) { res.status(503).json({ error: 'STRIPE_SECRET_KEY is not configured.' }); return false; }
+  return true;
+}
+function requireWise(res) {
+  if (!process.env.WISE_API_KEY || !process.env.WISE_PROFILE_ID) {
+    res.status(503).json({ error: 'WISE_API_KEY and WISE_PROFILE_ID are required for real payouts.' }); return false;
   }
   return true;
 }
-
-function validateAmount(amount) {
-  const value = Number(amount);
-  return Number.isFinite(value) && value > 0 && value <= 1000000;
+function validAmount(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 && amount <= 1000000;
 }
+function requiredText(value) { return typeof value === 'string' && value.trim().length > 0; }
+function wiseError(error) { return error.response?.data?.message || error.response?.data?.errors?.[0]?.message || error.message; }
 
-app.get('/health', (_req, res) => res.json({ ok: true, service: 'cashexc-payment-server' }));
+app.get('/health', (_req, res) => res.json({ ok: true, service: 'cashexc-payment-server', wiseConfigured: Boolean(process.env.WISE_API_KEY && process.env.WISE_PROFILE_ID) }));
 
-app.post(['/create-payment-intent', '/api/payments/create-intent'], async (req, res) => {
+app.post('/api/payments/create-intent', async (req, res) => {
   if (!requireStripe(res)) return;
-  const { amount, currency = 'usd', recipientName = '', recipientAccount = '' } = req.body || {};
-  if (!validateAmount(amount)) return res.status(400).json({ error: 'Amount must be greater than zero and no more than 1,000,000.' });
-
+  const { amount, currency = 'USD', recipientName = '', recipientAccount = '' } = req.body || {};
+  if (!validAmount(amount)) return res.status(400).json({ error: 'Amount must be greater than zero and no more than 1,000,000.' });
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
+    const intent = await stripe.paymentIntents.create({
       amount: Math.round(Number(amount) * 100),
       currency: String(currency).toLowerCase(),
       payment_method_types: ['card'],
-      // Stripe.js/Elements collects card data and handles 3DS authentication.
       confirmation_method: 'automatic',
-      metadata: {
-        source: 'cashexc-dashboard',
-        recipient_name: String(recipientName).slice(0, 200),
-        recipient_account: String(recipientAccount).slice(0, 200),
-      },
+      metadata: { source: 'cashexc', recipient_name: String(recipientName).slice(0, 200), recipient_account: String(recipientAccount).slice(0, 200) },
     });
-    return res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
-  } catch (error) {
-    console.error('create-payment-intent error:', error.message);
-    return res.status(400).json({ error: error.message || 'Unable to create payment intent.' });
-  }
+    return res.json({ clientSecret: intent.client_secret, paymentIntentId: intent.id });
+  } catch (error) { return res.status(400).json({ error: error.message }); }
 });
 
-// Prototype transfer adapter. Replace this with a licensed payout provider after payment settlement.
-app.post(['/transfers/execute', '/api/transfers/execute'], async (req, res) => {
-  const { paymentIntentId, recipientName, recipientAccount, currency = 'usd' } = req.body || {};
-  if (!paymentIntentId || !recipientName || !recipientAccount) {
-    return res.status(400).json({ error: 'paymentIntentId, recipientName, and recipientAccount are required.' });
-  }
-  if (!requireStripe(res)) return;
+// Real Wise Platform flow: quote -> recipient account -> transfer -> fund from Wise balance.
+// Stripe card settlement and Wise funding are separate rails; a Wise balance/payment source is required.
+app.post('/api/transfers/execute', async (req, res) => {
+  if (!requireStripe(res) || !requireWise(res)) return;
+  const { paymentIntentId, recipientName, iban, recipientAccount, bankCountry = 'US', targetCurrency = 'EUR', reference = 'Cashex transfer' } = req.body || {};
+  const accountDetails = iban || recipientAccount;
+  if (!requiredText(paymentIntentId) || !requiredText(recipientName) || !requiredText(accountDetails)) return res.status(400).json({ error: 'paymentIntentId, recipientName, and IBAN/recipientAccount are required.' });
+  if (!/^[A-Za-z]{2}$/.test(String(bankCountry)) || !/^[A-Za-z]{3}$/.test(String(targetCurrency))) return res.status(400).json({ error: 'bankCountry must be a 2-letter country code and targetCurrency a 3-letter code.' });
 
   try {
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (paymentIntent.status !== 'succeeded') {
-      return res.status(409).json({ error: 'Transfer can only be started after the card payment succeeds.' });
-    }
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (intent.status !== 'succeeded') return res.status(409).json({ error: 'Payout is allowed only after Stripe reports payment_intent.succeeded.' });
+    if (transfers.has(paymentIntentId)) return res.json({ ok: true, transfer: transfers.get(paymentIntentId), duplicate: true });
 
-    const existing = [...transfers.values()].find((item) => item.paymentIntentId === paymentIntentId);
-    if (existing) return res.json({ ok: true, transfer: existing, duplicate: true });
+    const sourceCurrency = String(intent.currency).toUpperCase();
+    const target = String(targetCurrency).toUpperCase();
+    const quote = await wise.post('/v2/quotes', {
+      profile: Number(process.env.WISE_PROFILE_ID), sourceCurrency, targetCurrency: target,
+      sourceAmount: intent.amount / 100, payOut: 'BANK_TRANSFER',
+    });
+    const recipient = await wise.post('/v1/accounts', {
+      profile: Number(process.env.WISE_PROFILE_ID), accountHolderName: String(recipientName).slice(0, 200), currency: target,
+      type: 'iban', details: { iban: String(accountDetails).replace(/\s/g, '').toUpperCase() },
+    });
+    const customerTransactionId = `cashexc_${crypto.randomUUID()}`;
+    const created = await wise.post('/v1/transfers', {
+      targetAccount: recipient.data.id, quoteUuid: quote.data.id, customerTransactionId,
+      details: { reference: String(reference).slice(0, 140) },
+    });
+    const funded = await wise.post(`/v3/profiles/${encodeURIComponent(process.env.WISE_PROFILE_ID)}/transfers/${created.data.id}/payments`, { type: 'BALANCE' });
 
-    const transfer = {
-      id: `demo_${crypto.randomUUID()}`,
-      paymentIntentId,
-      recipientName: String(recipientName).slice(0, 200),
-      recipientAccount: String(recipientAccount).slice(0, 200),
-      currency: String(currency).toLowerCase(),
-      amount: paymentIntent.amount,
-      provider: 'mock',
-      status: 'pending_provider_configuration',
-      createdAt: new Date().toISOString(),
-    };
-    transfers.set(transfer.id, transfer);
-    return res.status(202).json({ ok: true, transfer, message: 'Payment received. Connect a licensed payout provider to send funds.' });
+    const transfer = { id: String(created.data.id), paymentIntentId, provider: 'wise', status: funded.data.status || created.data.status || 'processing', quoteId: quote.data.id, recipientId: recipient.data.id, providerResponse: funded.data };
+    transfers.set(paymentIntentId, transfer);
+    return res.status(202).json({ ok: true, provider: 'wise', transfer, message: 'Stripe payment succeeded and the Wise transfer was funded from the configured Wise balance.' });
   } catch (error) {
-    console.error('execute-transfer error:', error.message);
-    return res.status(400).json({ error: error.message || 'Unable to create transfer.' });
+    console.error('Wise payout failed:', wiseError(error));
+    return res.status(502).json({ error: `Wise payout failed: ${wiseError(error)}` });
   }
 });
 
-app.get(['/transfers/:id', '/api/transfers/:id'], (req, res) => {
-  const transfer = transfers.get(req.params.id);
+app.get('/api/transfers/:paymentIntentId', (req, res) => {
+  const transfer = transfers.get(req.params.paymentIntentId);
   return transfer ? res.json({ transfer }) : res.status(404).json({ error: 'Transfer not found.' });
 });
 
