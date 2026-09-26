@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard - Payments | Cashex Smart Transfer</title>
+  <style>
+    :root {
+      --navy: #081b33;
+      --blue: #1769e0;
+      --cyan: #21b7c9;
+      --ink: #10243d;
+      --muted: #63748a;
+      --bg: #f5f8fc;
+      --card: #fff;
+      --line: #e5ebf3;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #b42318;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .container { max-width: 1280px; margin: auto; padding: 0 22px; }
+
+    /* Header */
+    header {
+      background: rgba(8, 27, 51, 0.98);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--cyan); }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+
+    button { cursor: pointer; }
+
+    .btn-logout {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Main Layout */
+    main {
+      padding: 48px 0;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 28px;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h1, .card h2, .card h3 { margin: 0 0 12px 0; }
+    .card h1 { font-size: 28px; }
+    .card h2 { font-size: 20px; }
+    .card h3 { font-size: 16px; }
+
+    /* Stats Section */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, var(--blue) 0%, #0f5cb8 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-box.secondary {
+      background: linear-gradient(135deg, var(--cyan) 0%, #1a9ba8 100%);
+    }
+
+    .stat-box.alert {
+      background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      margin: 0 -32px 32px;
+      padding: 0 32px;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      padding: 16px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab-button.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    .tab-button:hover {
+      color: var(--ink);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Payment Method Cards */
+    .payment-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 768px) {
+      .payment-methods-grid { grid-template-columns: 1fr; }
+    }
+
+    .method-card {
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .method-card:hover {
+      border-color: var(--blue);
+      background: rgba(23, 105, 224, 0.02);
+    }
+
+    .method-card.active {
+      border-color: var(--blue);
+      background: rgba(23, 105, 224, 0.08);
+    }
+
+    .method-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      background: var(--blue);
+      color: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .method-info h3 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+    }
+
+    .method-info p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Form Styles */
+    .form-section {
+      margin-bottom: 28px;
+    }
+
+    .form-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 16px 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-row.full {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    input, select, textarea {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.1);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Security Notices */
+    .security-notice {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: #065f46;
+    }
+
+    .security-notice.warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: var(--warning);
+      color: #92400e;
+    }
+
+    .security-notice.error {
+      background: rgba(180, 35, 24, 0.1);
+      border-color: var(--danger);
+      color: #7c2d12;
+    }
+
+    .security-icon {
+      font-size: 16px;
+      min-width: 16px;
+    }
+
+    /* Third-Party Provider Logos */
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 768px) {
+      .provider-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .provider-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .provider-card:hover {
+      border-color: var(--blue);
+      background: rgba(23, 105, 224, 0.02);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .provider-card.active {
+      border-color: var(--blue);
+      background: rgba(23, 105, 224, 0.15);
+      box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.1);
+    }
+
+    .provider-logo {
+      font-size: 40px;
+      line-height: 1;
+    }
+
+    .provider-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .provider-info {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Action Buttons */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .button-group button {
+      flex: 1;
+    }
+
+    button {
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0d5bb8;
+      box-shadow: 0 4px 12px rgba(23, 105, 224, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(23, 105, 224, 0.1);
+    }
+
+    /* Messages */
+    .message {
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      color: #065f46;
+    }
+
+    .message.error {
+      background: rgba(180, 35, 24, 0.1);
+      border: 1px solid var(--danger);
+      color: #7c2d12;
+    }
+
+    .message.info {
+      background: rgba(23, 105, 224, 0.1);
+      border: 1px solid var(--blue);
+      color: #0d5bb8;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .sidebar-card h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+    }
+
+    .transaction-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .transaction-item:last-child {
+      border-bottom: none;
+    }
+
+    .transaction-item strong {
+      display: block;
+      color: var(--ink);
+    }
+
+    .transaction-item span {
+      color: var(--muted);
+    }
+
+    /* Iframe Container for Third-Party Payments */
+    .provider-iframe-container {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 400px;
+      background: white;
+      margin: 20px 0;
+    }
+
+    .provider-iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Loading Animation */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.processing {
+      background: rgba(245, 158, 11, 0.1);
+      color: #92400e;
+    }
+
+    .status-badge.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #065f46;
+    }
+
+    .status-badge.error {
+      background: rgba(180, 35, 24, 0.1);
+      color: #7c2d12;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="logo" href="index.html">Cash<span>ex</span></a>
+      <div class="user-menu">
+        <div class="user-info">
+          <div class="avatar" id="user-avatar">U</div>
+          <div>
+            <div id="user-name" style="font-weight: 600;">Welcome</div>
+            <div style="font-size: 12px; opacity: 0.8;">Verified Account</div>
+          </div>
+        </div>
+        <button class="btn-logout" id="logout-button">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container grid-layout">
+      <section class="card">
+        <!-- Account Overview -->
+        <div>
+          <h1>Dashboard</h1>
+          <p style="color: var(--muted); margin: 0 0 28px 0;">Secure payments with trusted third-party processors</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Account Balance</div>
+            <div class="stat-value" id="account-balance">$0.00</div>
+          </div>
+          <div class="stat-box secondary">
+            <div class="stat-label">Total Transfers</div>
+            <div class="stat-value" id="total-transfers">0</div>
+          </div>
+          <div class="stat-box alert">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="pending-transfers">0</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-button active" data-tab="stripe-payment">Stripe</button>
+          <button class="tab-button" data-tab="paypal-payment">PayPal</button>
+          <button class="tab-button" data-tab="square-payment">Square</button>
+          <button class="tab-button" data-tab="adyen-payment">Adyen</button>
+          <button class="tab-button" data-tab="wise-payment">Wise</button>
+          <button class="tab-button" data-tab="2checkout-payment">Verifone</button>
+        </div>
+
+        <!-- Tab 1: Stripe Payment -->
+        <div id="stripe-payment" class="tab-content active">
+          <h2>💳 Stripe Payments</h2>
+          <p style="color: var(--muted);">Secure card payments processed by Stripe</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>PCI-DSS Level 1:</strong> Stripe handles all card data. Your information is never stored on our servers.</span>
+          </div>
+
+          <form id="stripe-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="stripe-from-currency">From</label>
+                  <select id="stripe-from-currency">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="stripe-to-currency">To</label>
+                  <select id="stripe-to-currency">
+                    <option value="PKR">PKR - Pakistani Rupee</option>
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="stripe-amount">Amount</label>
+                  <input type="number" id="stripe-amount" min="1" step="0.01" value="100">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="stripe-recipient">Full Name</label>
+                  <input type="text" id="stripe-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="stripe-recipient-account">Account/Email</label>
+                  <input type="text" id="stripe-recipient-account" placeholder="Recipient account or email">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>Stripe Checkout:</strong> Clicking "Pay with Stripe" will redirect to Stripe's secure hosted payment page. No card details enter this form.</span>
+            </div>
+
+            <div id="stripe-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="stripe-checkout-btn">
+                🔗 Pay with Stripe Checkout
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 2: PayPal Payment -->
+        <div id="paypal-payment" class="tab-content">
+          <h2>🅿️ PayPal Payments</h2>
+          <p style="color: var(--muted);">Pay securely with your PayPal account</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>Buyer Protection:</strong> PayPal provides buyer protection on all transactions.</span>
+          </div>
+
+          <form id="paypal-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="paypal-from-currency">From</label>
+                  <select id="paypal-from-currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="paypal-to-currency">To</label>
+                  <select id="paypal-to-currency">
+                    <option value="PKR">PKR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="paypal-amount">Amount</label>
+                  <input type="number" id="paypal-amount" min="1" step="0.01" value="100">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="paypal-recipient">Full Name</label>
+                  <input type="text" id="paypal-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>PayPal Standard:</strong> You'll be redirected to PayPal's login to authorize payment securely.</span>
+            </div>
+
+            <div id="paypal-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="paypal-checkout-btn">
+                🅿️ Pay with PayPal
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 3: Square Payment -->
+        <div id="square-payment" class="tab-content">
+          <h2>◾ Square Payments</h2>
+          <p style="color: var(--muted);">Cards, ACH, and bank transfers via Square</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>Square Payment Form:</strong> Secure web payments with instant settlement.</span>
+          </div>
+
+          <form id="square-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="square-from-currency">From</label>
+                  <select id="square-from-currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="square-to-currency">To</label>
+                  <select id="square-to-currency">
+                    <option value="PKR">PKR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="square-amount">Amount</label>
+                  <input type="number" id="square-amount" min="1" step="0.01" value="100">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="square-recipient">Full Name</label>
+                  <input type="text" id="square-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="square-email">Email</label>
+                  <input type="email" id="square-email" placeholder="Recipient email">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>Square Web Payments:</strong> Secure form with multiple payment methods.</span>
+            </div>
+
+            <div id="square-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="square-checkout-btn">
+                💳 Pay with Square
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 4: Adyen Payment -->
+        <div id="adyen-payment" class="tab-content">
+          <h2>Adyen Global Payments</h2>
+          <p style="color: var(--muted);">150+ payment methods in 195+ countries</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>Adyen Drop-in:</strong> PCI-DSS Level 1 compliant hosted payment page.</span>
+          </div>
+
+          <form id="adyen-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="adyen-from-currency">From</label>
+                  <select id="adyen-from-currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="adyen-to-currency">To</label>
+                  <select id="adyen-to-currency">
+                    <option value="PKR">PKR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="adyen-amount">Amount</label>
+                  <input type="number" id="adyen-amount" min="1" step="0.01" value="100">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="adyen-recipient">Full Name</label>
+                  <input type="text" id="adyen-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="adyen-country">Country</label>
+                  <input type="text" id="adyen-country" placeholder="Recipient country">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>Adyen Drop-in:</strong> Interactive payment component supporting 150+ methods including local options.</span>
+            </div>
+
+            <div id="adyen-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="adyen-checkout-btn">
+                🌍 Proceed to Adyen
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 5: Wise Payment -->
+        <div id="wise-payment" class="tab-content">
+          <h2>💱 Wise (TransferWise)</h2>
+          <p style="color: var(--muted);">Real mid-market exchange rates for international transfers</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>Real Exchange Rates:</strong> Wise uses live mid-market rates with transparent fees.</span>
+          </div>
+
+          <form id="wise-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="wise-from-currency">From</label>
+                  <select id="wise-from-currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="wise-to-currency">To</label>
+                  <select id="wise-to-currency">
+                    <option value="PKR">PKR</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="wise-amount">Amount</label>
+                  <input type="number" id="wise-amount" min="100" step="0.01" value="500">
+                  <div class="input-hint">Minimum $100</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient Bank Details</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="wise-recipient">Full Name</label>
+                  <input type="text" id="wise-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="wise-account">Account/IBAN</label>
+                  <input type="text" id="wise-account" placeholder="Account number or IBAN">
+                </div>
+                <div class="form-group">
+                  <label for="wise-country">Country</label>
+                  <input type="text" id="wise-country" placeholder="Recipient country">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>Wise Link:</strong> You'll be redirected to Wise to complete your bank transfer with real rates.</span>
+            </div>
+
+            <div id="wise-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="wise-checkout-btn">
+                💱 Send with Wise
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 6: 2Checkout (Verifone) Payment -->
+        <div id="2checkout-payment" class="tab-content">
+          <h2>Verifone Global Payments</h2>
+          <p style="color: var(--muted);">200+ payment methods in 195+ countries</p>
+
+          <div class="security-notice">
+            <span class="security-icon">🔒</span>
+            <span><strong>Verifone (2Checkout):</strong> PCI-DSS Level 1 certified. Accepts local and global payment methods.</span>
+          </div>
+
+          <form id="2checkout-form">
+            <div class="form-section">
+              <h3>Transfer Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="2checkout-from-currency">From</label>
+                  <select id="2checkout-from-currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="2checkout-to-currency">To</label>
+                  <select id="2checkout-to-currency">
+                    <option value="PKR">PKR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="2checkout-amount">Amount</label>
+                  <input type="number" id="2checkout-amount" min="1" step="0.01" value="100">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Recipient</h3>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label for="2checkout-recipient">Full Name</label>
+                  <input type="text" id="2checkout-recipient" placeholder="Recipient name">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="2checkout-email">Email</label>
+                  <input type="email" id="2checkout-email" placeholder="Recipient email">
+                </div>
+                <div class="form-group">
+                  <label for="2checkout-country">Country</label>
+                  <input type="text" id="2checkout-country" placeholder="Recipient country">
+                </div>
+              </div>
+            </div>
+
+            <div class="security-notice" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1e40af;">
+              <span class="security-icon">ℹ️</span>
+              <span><strong>Verifone Hosted Payment Page:</strong> Supports 200+ payment methods and local acquiring.</span>
+            </div>
+
+            <div id="2checkout-message" class="message"></div>
+
+            <div class="button-group">
+              <button type="button" class="btn-primary" id="2checkout-checkout-btn">
+                🌐 Pay with Verifone
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="main-message" class="message"></div>
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <!-- Quick Stats -->
+        <div class="sidebar-card">
+          <h3>📊 Quick Stats</h3>
+          <div class="transaction-item">
+            <strong id="sidebar-balance">$0.00</strong>
+            <span>Available Balance</span>
+          </div>
+          <div class="transaction-item">
+            <strong id="sidebar-verified">✓ Verified</strong>
+            <span>Account Status</span>
+          </div>
+          <div class="transaction-item">
+            <strong id="sidebar-pending">0 Pending</strong>
+            <span>Active Transfers</span>
+          </div>
+        </div>
+
+        <!-- Providers Info -->
+        <div class="sidebar-card">
+          <h3>🛡️ Supported Processors</h3>
+          <div style="font-size: 12px; color: var(--muted); line-height: 2;">
+            <div>✓ Stripe</div>
+            <div>✓ PayPal</div>
+            <div>✓ Square</div>
+            <div>✓ Adyen</div>
+            <div>✓ Wise</div>
+            <div>✓ Verifone</div>
+          </div>
+        </div>
+
+        <!-- Security Info -->
+        <div class="sidebar-card">
+          <h3>🔐 Security Standards</h3>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.8;">
+            <div>✓ PCI-DSS Level 1</div>
+            <div>✓ End-to-end encryption</div>
+            <div>✓ SSL/TLS 1.3</div>
+            <div>✓ 3D Secure 2.0</div>
+            <div>✓ Fraud detection</div>
+            <div>✓ AML/KYC compliant</div>
+          </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="sidebar-card">
+          <h3>❓ Need Help?</h3>
+          <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--muted);">
+            Having payment issues? Contact our support team.
+          </p>
+          <button style="width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">
+            📞 Contact Support
+          </button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <script>
+    // Configuration
+    const config = window.CASHEXC_CONFIG || {};
+    const supabaseUrl = config.supabaseUrl;
+    const supabaseAnonKey = config.supabaseAnonKey;
+
+    // Exchange rates (mock)
+    const exchangeRates = {
+      'USD:PKR': 278.5, 'USD:EUR': 0.92, 'USD:GBP': 0.78, 'USD:AED': 3.67,
+      'EUR:USD': 1.09, 'EUR:PKR': 303.6, 'EUR:GBP': 0.85, 'EUR:AED': 4.01,
+      'GBP:USD': 1.28, 'GBP:EUR': 1.18, 'GBP:PKR': 356.8, 'GBP:AED': 4.71,
+      'PKR:USD': 0.0036, 'PKR:EUR': 0.0033, 'PKR:GBP': 0.0028, 'PKR:AED': 0.013,
+      'AED:USD': 0.27, 'AED:EUR': 0.25, 'AED:GBP': 0.21, 'AED:PKR': 76.1
+    };
+
+    function getExchangeRate(from, to) {
+      if (from === to) return 1;
+      const key = `${from}:${to}`;
+      return exchangeRates[key] || 1;
+    }
+
+    // Tab Navigation
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabName = btn.dataset.tab;
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+      });
+    });
+
+    // Helper function
+    function showMessage(elementId, text, type) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.innerHTML = text;
+        element.className = `message show ${type}`;
+      }
+    }
+
+    // STRIPE PAYMENT
+    document.getElementById('stripe-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('stripe-amount').value);
+      const recipient = document.getElementById('stripe-recipient').value;
+      
+      if (amount <= 0 || !recipient) {
+        showMessage('stripe-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      showMessage('stripe-message', '<span class="spinner"></span> Redirecting to Stripe Checkout...', 'info');
+      
+      // Simulate Stripe Checkout redirect
+      setTimeout(() => {
+        showMessage('stripe-message', `
+          <strong>Stripe Checkout Simulation</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          Recipient: ${recipient}<br>
+          <br>
+          In production, clicking this button redirects to:<br>
+          <code>https://checkout.stripe.com/pay/cs_live_...</code><br>
+          <br>
+          <a href="javascript:alert('Demo: Stripe checkout would open here')" style="color: #1769e0; text-decoration: underline;">
+            Click here to simulate Stripe Checkout
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // PAYPAL PAYMENT
+    document.getElementById('paypal-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('paypal-amount').value);
+      const recipient = document.getElementById('paypal-recipient').value;
+      
+      if (amount <= 0 || !recipient) {
+        showMessage('paypal-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      showMessage('paypal-message', '<span class="spinner"></span> Redirecting to PayPal...', 'info');
+      
+      setTimeout(() => {
+        showMessage('paypal-message', `
+          <strong>PayPal Payment Simulation</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          Recipient: ${recipient}<br>
+          <br>
+          In production, you're redirected to PayPal's login:<br>
+          <code>https://www.paypal.com/checkoutnow?token=EC-...</code><br>
+          <br>
+          <a href="javascript:alert('Demo: PayPal login page would open here')" style="color: #1769e0; text-decoration: underline;">
+            Proceed to PayPal Login
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // SQUARE PAYMENT
+    document.getElementById('square-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('square-amount').value);
+      const recipient = document.getElementById('square-recipient').value;
+      
+      if (amount <= 0 || !recipient) {
+        showMessage('square-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      showMessage('square-message', '<span class="spinner"></span> Loading Square Web Payments...', 'info');
+      
+      setTimeout(() => {
+        showMessage('square-message', `
+          <strong>Square Web Payments Form</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          <br>
+          In production, Square's Web Payments SDK loads here:<br>
+          <code>script src="https://web.squarecdn.com/.../square.js"</code><br>
+          <br>
+          Supported methods: Cards, Apple Pay, Google Pay, ACH, Bank Transfers<br>
+          <br>
+          <a href="javascript:alert('Demo: Square payment form would load here')" style="color: #1769e0; text-decoration: underline;">
+            Click to simulate payment form
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // ADYEN PAYMENT
+    document.getElementById('adyen-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('adyen-amount').value);
+      const recipient = document.getElementById('adyen-recipient').value;
+      
+      if (amount <= 0 || !recipient) {
+        showMessage('adyen-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      showMessage('adyen-message', '<span class="spinner"></span> Loading Adyen Drop-in...', 'info');
+      
+      setTimeout(() => {
+        showMessage('adyen-message', `
+          <strong>Adyen Drop-in Component</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          <br>
+          In production, Adyen Drop-in loads with:<br>
+          <code>script src="https://checkoutshopper-{environment}.adyen.com/..."</code><br>
+          <br>
+          150+ payment methods including:<br>
+          • Cards (Visa, Mastercard, Amex)<br>
+          • Digital Wallets (Apple Pay, Google Pay)<br>
+          • Local methods (iDEAL, Giropay, Bancontact)<br>
+          • Bank transfers (SEPA, Bankomatik)<br>
+          <br>
+          <a href="javascript:alert('Demo: Adyen Drop-in would render here')" style="color: #1769e0; text-decoration: underline;">
+            View payment methods
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // WISE PAYMENT
+    document.getElementById('wise-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('wise-amount').value);
+      const recipient = document.getElementById('wise-recipient').value;
+      
+      if (amount < 100 || !recipient) {
+        showMessage('wise-message', 'Minimum $100 required', 'error');
+        return;
+      }
+
+      showMessage('wise-message', '<span class="spinner"></span> Redirecting to Wise...', 'info');
+      
+      setTimeout(() => {
+        showMessage('wise-message', `
+          <strong>Wise Transfer Simulation</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          Recipient: ${recipient}<br>
+          <br>
+          In production, you're redirected to Wise:<br>
+          <code>https://wise.com/transfers/...</code><br>
+          <br>
+          Features:<br>
+          • Real mid-market exchange rates<br>
+          • Transparent fees<br>
+          • 1-3 business day delivery<br>
+          • Secure bank account verification<br>
+          <br>
+          <a href="javascript:alert('Demo: Wise transfer page would open here')" style="color: #1769e0; text-decoration: underline;">
+            Proceed to Wise
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // 2CHECKOUT (VERIFONE) PAYMENT
+    document.getElementById('2checkout-checkout-btn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('2checkout-amount').value);
+      const recipient = document.getElementById('2checkout-recipient').value;
+      
+      if (amount <= 0 || !recipient) {
+        showMessage('2checkout-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      showMessage('2checkout-message', '<span class="spinner"></span> Loading Verifone Payment Page...', 'info');
+      
+      setTimeout(() => {
+        showMessage('2checkout-message', `
+          <strong>Verifone Hosted Payment Page</strong><br>
+          Amount: $${amount.toFixed(2)}<br>
+          <br>
+          In production, you're redirected to:<br>
+          <code>https://secure.2checkout.com/checkout/api/...</code><br>
+          <br>
+          200+ payment methods available:<br>
+          • Credit/Debit Cards<br>
+          • Digital Wallets<br>
+          • Local payment methods<br>
+          • Bank transfers<br>
+          • Cryptocurrencies<br>
+          <br>
+          Processing in 195+ countries<br>
+          <br>
+          <a href="javascript:alert('Demo: Verifone payment page would open here')" style="color: #1769e0; text-decoration: underline;">
+            Continue to Verifone
+          </a>
+        `, 'info');
+      }, 800);
+    });
+
+    // Logout
+    document.getElementById('logout-button')?.addEventListener('click', async () => {
+      if (supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('YOUR_')) {
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        await supabase.auth.signOut();
+      }
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
